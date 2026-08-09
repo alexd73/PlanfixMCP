@@ -1,0 +1,32 @@
+[project]
+name = "planfix-mcp"
+version = "0.1.0"
+description = "MCP-сервер для Planfix REST API: инструменты генерируются из OpenAPI-спеки через FastMCP.from_openapi"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastmcp==3.4.6",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-anyio",
+]
+
+[project.scripts]
+planfix-mcp = "planfix_mcp.__main__:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["planfix_mcp"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.uv]
+package = true
