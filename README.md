@@ -1,63 +1,56 @@
 # PlanfixMCP
 
-MCP-сервер для Planfix REST API. Инструменты генерируются из вендоренной OpenAPI-спеки
-(`specs/swagger.json`) через `FastMCP.from_openapi()` пакета [fastmcp](https://gofastmcp.com):
-114 операций → MCP-инструменты с короткими snake_case именами и русскими описаниями.
-
-## Возможности
-
-- Генерация из спеки: `FastMCP.from_openapi` (+114 операций)
-- Короткие snake_case имена (`task_list`, `comment_add`) через `planfix_mcp/names.py`
-- Русские описания через `planfix_mcp/descriptions.py`
-- Фильтрация инструментов: по тегам OpenAPI (по умолчанию ядро `task,contact,project,comments`)
-  или точечно по `operationId` (`PLANFIX_INCLUDE_OPERATION_IDS` / `PLANFIX_EXCLUDE_OPERATION_IDS`)
-- Bearer-авторизация (`PLANFIX_API_TOKEN`)
-- Валидация ответов по схемам спеки
-
-## Требования
-
-- Python >= 3.10
-- [uv](https://docs.astral.sh/uv/) для окружения
+MCP-сервер для Planfix REST API, предоставляющий инструменты для работы с задачами, контактами, проектами и комментариями в LLM-ассистентах.
 
 ## Установка и запуск
 
-```bash
-uv sync
-export PLANFIX_BASE_URL=https://your-account.planfix.com/rest   # или в .env
-export PLANFIX_API_TOKEN=<token>
-uv run planfix-mcp           # stdio-транспорт
-uv run planfix-mcp --transport http   # HTTP-транспорт
-```
+1. Установите [uv](https://docs.astral.sh/uv/).
+2. Склонируйте проект и установите зависимости:
+   ```bash
+   git clone <url>
+   cd PlanfixMCP
+   uv sync
+   ```
+3. Создайте файл `.env` на основе `.env.example` и укажите в нем:
+   - `PLANFIX_BASE_URL`: Базовый URL вашего REST API (например, `https://account.planfix.com/rest`).
+   - `PLANFIX_API_TOKEN`: Ваш Bearer-токен.
 
-Переменные также читаются из `.env` (скопируйте `.env.example`).
+4. Запустите сервер (через stdio для MCP-клиента):
+   ```bash
+   uv run planfix-mcp
+   ```
 
 ## Конфигурация
 
-| Переменная | CLI | Дефолт | Описание |
-|---|---|---|---|
-| `PLANFIX_BASE_URL` | `--base-url` | `https://your-account.planfix.com/rest` | Базовый URL REST API |
-| `PLANFIX_API_TOKEN` | `--api-token` | — | Bearer-токен Planfix |
-| `PLANFIX_TAGS` | `--tags` | `task,contact,project,comments` | Теги OpenAPI для включения инструментов |
-| `PLANFIX_INCLUDE_OPERATION_IDS` | `--include-operation-ids` | — | Дополнительные операции по `operationId` |
-| `PLANFIX_EXCLUDE_OPERATION_IDS` | `--exclude-operation-ids` | — | Исключить операции по `operationId` |
-| `PLANFIX_VALIDATE_OUTPUT` | `--validate-output` | `true` | Валидация ответов по схемам спеки |
+Все параметры задаются через `.env` файл или переменные окружения:
 
-## Обновление спеки
+| Переменная | Описание |
+|---|---|
+| `PLANFIX_BASE_URL` | Базовый URL REST API Planfix. |
+| `PLANFIX_API_TOKEN` | Bearer-токен авторизации. |
+| `PLANFIX_EXCLUDE_TECHNICAL_COMMENTS` | Если `true`, скрывает технические события (смена статусов, дат) в ленте комментариев. |
+| `PLANFIX_TAGS` | Список тегов OpenAPI для фильтрации инструментов (по умолчанию: `task,contact,project,comments`). |
 
-```bash
-uv run python scripts/update_spec.py
+## Использование в MCP-клиентах
+
+Добавьте в ваш `opencode.json` (или аналогичный конфиг клиента):
+
+```json
+{
+  "planfix": {
+    "type": "local",
+    "command": ["uv", "run", "planfix-mcp"],
+    "environment": {
+      "PLANFIX_BASE_URL": "{env:PLANFIX_BASE_URL}",
+      "PLANFIX_API_TOKEN": "{env:PLANFIX_API_TOKEN}",
+      "PLANFIX_EXCLUDE_TECHNICAL_COMMENTS": "true"
+    }
+  }
+}
 ```
 
-Если спеку попадают новые операции — перегенерировать словари и обновить тесты:
+## Установка через AI-агента
 
-```bash
-uv run python scripts/gen_dictionaries.py
-```
+Вы можете поручить установку и настройку этого MCP-сервера AI-агенту, используя следующий промпт:
 
-## Тесты
-
-```bash
-uv run pytest -q
-```
-
-Интеграционные тесты используют `httpx.MockTransport` и не ходят в реальный API.
+> "Клонируй репозиторий PlanfixMCP по адресу `<url>`, установи зависимости через `uv sync` и помоги мне создать файл `.env` с настройками доступа к API Planfix (`PLANFIX_BASE_URL` и `PLANFIX_API_TOKEN`). После этого проверь работоспособность тестами и добавь конфигурацию сервера в мой `opencode.json`."

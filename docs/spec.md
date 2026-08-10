@@ -102,6 +102,7 @@ PlanfixMCP/
 | `PLANFIX_TAGS` | `--tags` | `task,contact,project,comments` | Ограничение инструментов OpenAPI-тегами (через `route_map_fn`) |
 | `PLANFIX_INCLUDE_OPERATION_IDS` | `--include-operation-ids` | — | Доп. allowlist операций по `operationId` |
 | `PLANFIX_EXCLUDE_OPERATION_IDS` | `--exclude-operation-ids` | — | Исключение операций по `operationId` |
+| `PLANFIX_EXCLUDE_TECHNICAL_COMMENTS` | `--exclude-technical` | `false` | Исключать технические события (изменения статусов/сроков) из ленты комментариев |
 | `PLANFIX_VALIDATE_OUTPUT` | `--validate-output` | `true` | Валидация ответов по схемам спеки |
 
 **Логика фильтрации** (в `filters.py`, через `route_map_fn`):

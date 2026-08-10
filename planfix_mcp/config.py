@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     include_operation_ids: str = ""
     exclude_operation_ids: str = ""
     validate_output: bool = True
+    exclude_technical_comments: bool = False
+    read_only: bool = False
 
     @property
     def tag_list(self) -> list[str]:

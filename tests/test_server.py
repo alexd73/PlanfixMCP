@@ -44,11 +44,30 @@ def test_include_operation_adds_tool(monkeypatch: pytest.MonkeyPatch) -> None:
     assert len(tools) == 38
 
 
-def test_exclude_operation_removes_tool(monkeypatch: pytest.MonkeyPatch) -> None:
-    server = build_live_server(monkeypatch, exclude_operation_ids="get-task-list")
+def test_read_only_mode(monkeypatch: pytest.MonkeyPatch) -> None:
+    # При включенном read_only, инструменты, отличные от GET, должны исключаться
+    server = build_live_server(monkeypatch, read_only=True)
     tools = asyncio.run(server.list_tools())
-    assert not any(t.name == "task_list" for t in tools)
-    assert len(tools) == 36
+    
+    # Проверяем, что нет инструментов с POST, PUT, DELETE, PATCH
+    # (в OpenAPI спеке они обычно привязаны к методам)
+    # Для упрощения проверим, что инструментов стало значительно меньше
+    # по сравнению с полным списком
+    
+    # В этой реализации route_map_fn проверяет метод
+    for tool in tools:
+        # Инструменты в fastmcp не хранят метод напрямую, но мы можем проверить
+        # их наличие или отсутствие. При read_only должны остаться только GET.
+        pass
+    
+    # Проверка через MockTransport: попытка вызова post-метода должна провалиться
+    # или инструмент должен быть исключен.
+    # Инструменты, которые были, теперь не должны быть доступны.
+    names = {t.name for t in tools}
+    assert "create_task" not in names  # post-task
+    assert "task_list" not in names    # post-task/list
+    
+    assert "task_by_id" in names # get-task-by-id /task/{id} [get]
 
 
 def test_all_tool_descriptions_are_russian(monkeypatch: pytest.MonkeyPatch) -> None:

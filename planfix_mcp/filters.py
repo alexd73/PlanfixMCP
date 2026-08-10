@@ -25,17 +25,23 @@ def build_route_map_fn(settings: Settings):
 
     def route_map_fn(route: HTTPRoute, mcp_type: MCPType) -> MCPType | None:
         operation_id = route.operation_id or ""
+        
+        # 1. Исключения (приоритетны)
+        if settings.read_only and route.method.upper() != "GET":
+            print(f"DEBUG: ReadOnly exclusion: {operation_id} ({route.method})")
+            return MCPType.EXCLUDE
         if operation_id in exclude_ids:
             return MCPType.EXCLUDE
 
+        # 2. Разрешения
         route_tags = {t.lower() for t in (route.tags or [])}
         if route_tags & allowed_tags:
             return MCPType.TOOL
-
         if operation_id in include_ids:
             return MCPType.TOOL
 
         return MCPType.EXCLUDE
+
 
     return route_map_fn
 
