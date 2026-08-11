@@ -25,10 +25,9 @@ def build_route_map_fn(settings: Settings):
 
     def route_map_fn(route: HTTPRoute, mcp_type: MCPType) -> MCPType | None:
         operation_id = route.operation_id or ""
-        
+
         # 1. Исключения (приоритетны)
         if settings.read_only and route.method.upper() != "GET":
-            print(f"DEBUG: ReadOnly exclusion: {operation_id} ({route.method})")
             return MCPType.EXCLUDE
         if operation_id in exclude_ids:
             return MCPType.EXCLUDE
