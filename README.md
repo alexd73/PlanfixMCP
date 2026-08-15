@@ -211,16 +211,20 @@ task_summary(start_date_after="2026-08-01", end_date_before="2026-08-15", includ
   "mcp": {
     "planfix": {
       "type": "local",
-      "command": ["uv", "run", "planfix-mcp"],
-      "environment": {
-        "PLANFIX_BASE_URL": "{env:PLANFIX_BASE_URL}",
-        "PLANFIX_API_TOKEN": "{env:PLANFIX_API_TOKEN}",
-        "PLANFIX_EXCLUDE_TECHNICAL_COMMENTS": "true"
-      }
+      "command": ["uv", "--project", "D:/Projects/dy-team/PlanfixMCP", "run", "--env-file", ".env", "planfix-mcp"],
+      "cwd": ".",
+      "enabled": true
     }
   }
 }
 ```
+
+Локальный `.env` проекта MCP-клиентом не читается, поэтому он подгружается явно:
+
+- `--project D:/Projects/dy-team/PlanfixMCP` — путь к проекту (укажите свой после `git clone`);
+- `--env-file .env` — загружает переменные из файла `.env` проекта;
+- `cwd: "."` — рабочая директория сервера (относительный путь `.env` и каталог выгрузки
+  резолвятся от неё; по умолчанию — директория рабочего пространства клиента).
 
 Сервер объявляется один раз в блоке `mcp` и становится доступен **всем агентам**
 opencode — встроенным (`build`, `plan`) и кастомным. Отдельно прописывать его для
@@ -230,8 +234,8 @@ opencode — встроенным (`build`, `plan`) и кастомным. От�
 ### Подключение для других агентов
 
 Подключение для любого другого агента **аналогичное** — используется тот же самый
-блок `mcp`. Кастомному агенту достаточно просто существовать в конфиге, и сервер
-будет ему доступен:
+блок `mcp` с той же командой. Кастомному агенту достаточно просто существовать в
+конфиге, и сервер будет ему доступен:
 
 ```json
 {
@@ -239,11 +243,9 @@ opencode — встроенным (`build`, `plan`) и кастомным. От�
   "mcp": {
     "planfix": {
       "type": "local",
-      "command": ["uv", "run", "planfix-mcp"],
-      "environment": {
-        "PLANFIX_BASE_URL": "{env:PLANFIX_BASE_URL}",
-        "PLANFIX_API_TOKEN": "{env:PLANFIX_API_TOKEN}"
-      }
+      "command": ["uv", "--project", "D:/Projects/dy-team/PlanfixMCP", "run", "--env-file", ".env", "planfix-mcp"],
+      "cwd": ".",
+      "enabled": true
     }
   },
   "agent": {
