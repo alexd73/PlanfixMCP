@@ -203,21 +203,62 @@ task_summary(start_date_after="2026-08-01", end_date_before="2026-08-15", includ
 
 ## Использование в MCP-клиентах
 
-Добавьте в ваш `opencode.json` (или аналогичный конфиг клиента):
+Добавьте сервер в `mcp` вашего `opencode.json` (или аналогичного конфига клиента):
 
 ```json
 {
-  "planfix": {
-    "type": "local",
-    "command": ["uv", "run", "planfix-mcp"],
-    "environment": {
-      "PLANFIX_BASE_URL": "{env:PLANFIX_BASE_URL}",
-      "PLANFIX_API_TOKEN": "{env:PLANFIX_API_TOKEN}",
-      "PLANFIX_EXCLUDE_TECHNICAL_COMMENTS": "true"
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "planfix": {
+      "type": "local",
+      "command": ["uv", "run", "planfix-mcp"],
+      "environment": {
+        "PLANFIX_BASE_URL": "{env:PLANFIX_BASE_URL}",
+        "PLANFIX_API_TOKEN": "{env:PLANFIX_API_TOKEN}",
+        "PLANFIX_EXCLUDE_TECHNICAL_COMMENTS": "true"
+      }
     }
   }
 }
 ```
+
+Сервер объявляется один раз в блоке `mcp` и становится доступен **всем агентам**
+opencode — встроенным (`build`, `plan`) и кастомным. Отдельно прописывать его для
+каждого агента не нужно: инструменты `planfix_*` сразу появляются в их списке
+инструментов.
+
+### Подключение для других агентов
+
+Подключение для любого другого агента **аналогичное** — используется тот же самый
+блок `mcp`. Кастомному агенту достаточно просто существовать в конфиге, и сервер
+будет ему доступен:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "planfix": {
+      "type": "local",
+      "command": ["uv", "run", "planfix-mcp"],
+      "environment": {
+        "PLANFIX_BASE_URL": "{env:PLANFIX_BASE_URL}",
+        "PLANFIX_API_TOKEN": "{env:PLANFIX_API_TOKEN}"
+      }
+    }
+  },
+  "agent": {
+    "planfix-analyst": {
+      "description": "Готовит сводки и выгрузки по задачам ПланФикс.",
+      "mode": "subagent",
+      "prompt": "Ты работаешь с задачами ПланФикс: для обзора используй planfix_task_summary, для массовой выгрузки — planfix_export_tasks."
+    }
+  }
+}
+```
+
+Если нужно ограничить доступ к инструментам для конкретного агента — сделайте это
+через `permission` агента (см. [документацию opencode](https://opencode.ai/docs/agents)),
+сам сервер прописывать у агента не требуется.
 
 ## Установка через AI-агента
 
