@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
+from urllib.parse import urlparse
 
 import httpx
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -35,6 +36,27 @@ class Settings(BaseSettings):
     validate_output: bool = True
     exclude_technical_comments: bool = False
     read_only: bool = False
+    export_dir: str = "export"
+    export_account: str = ""
+    comments_per_file: int = 100
+
+    @property
+    def export_root(self) -> Path:
+        """Абсолютный базовый каталог выгрузки (из PLANFIX_EXPORT_DIR).
+
+        Относительный путь резолвится от рабочего каталога процесса (cwd),
+        чтобы выгрузка попадала в проект, из которого запущен сервер.
+        """
+        path = Path(self.export_dir)
+        return path if path.is_absolute() else Path.cwd() / path
+
+    @property
+    def account_name(self) -> str:
+        """Имя аккаунта: PLANFIX_EXPORT_ACCOUNT или поддомен из base_url."""
+        if self.export_account:
+            return self.export_account
+        host = urlparse(self.base_url).hostname or ""
+        return host.split(".")[0] if host else ""
 
     @property
     def tag_list(self) -> list[str]:

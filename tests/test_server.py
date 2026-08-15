@@ -18,7 +18,7 @@ def build_live_server(monkeypatch: pytest.MonkeyPatch, **overrides) -> object:
 def test_build_server_returns_tools() -> None:
     server = build_server(settings=Settings(_env_file=None, api_token="test-token"))
     tools = asyncio.run(server.list_tools())
-    assert len(tools) == 37
+    assert len(tools) == 39
 
 
 def test_default_names_and_russian_descriptions(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -41,33 +41,36 @@ def test_include_operation_adds_tool(monkeypatch: pytest.MonkeyPatch) -> None:
     server = build_live_server(monkeypatch, include_operation_ids="ping")
     tools = asyncio.run(server.list_tools())
     assert any(t.name == "ping" for t in tools)
-    assert len(tools) == 38
+    assert len(tools) == 40
 
 
 def test_read_only_mode(monkeypatch: pytest.MonkeyPatch) -> None:
-    # При включенном read_only, инструменты, отличные от GET, должны исключаться
+    # В read_only остаются GET-маршруты и POST-маршруты с operation_id,
+    # начинающимся с "get-" (чтение списков/данных). Мутации исключаются.
     server = build_live_server(monkeypatch, read_only=True)
     tools = asyncio.run(server.list_tools())
-    
-    # Проверяем, что нет инструментов с POST, PUT, DELETE, PATCH
-    # (в OpenAPI спеке они обычно привязаны к методам)
-    # Для упрощения проверим, что инструментов стало значительно меньше
-    # по сравнению с полным списком
-    
-    # В этой реализации route_map_fn проверяет метод
-    for tool in tools:
-        # Инструменты в fastmcp не хранят метод напрямую, но мы можем проверить
-        # их наличие или отсутствие. При read_only должны остаться только GET.
-        pass
-    
-    # Проверка через MockTransport: попытка вызова post-метода должна провалиться
-    # или инструмент должен быть исключен.
-    # Инструменты, которые были, теперь не должны быть доступны.
     names = {t.name for t in tools}
-    assert "create_task" not in names  # post-task
-    assert "task_list" not in names    # post-task/list
-    
-    assert "task_by_id" in names # get-task-by-id /task/{id} [get]
+
+    # Мутации отсутствуют
+    assert "create_task" not in names          # post-task
+    assert "update_task" not in names          # post-task-by-id
+    assert "add_task_comment" not in names     # post-task-add-comment
+    assert "update_task_comment" not in names  # post-task-update-comment
+    assert "delete_comment" not in names       # delete-comment-id
+    assert "delete_file" not in names          # delete-file-id
+
+    # Читающие списки (POST, но operation_id начинается с "get-") доступны
+    assert "task_list" in names          # get-task-list
+    assert "task_comments" in names      # get-task-comments
+    assert "comment_list" in names       # get-comment-list
+    assert "contact_list" in names       # get-contact-list
+    assert "contact_comments" in names   # get-contact-comments
+    assert "project_list" in names       # get-project-list
+    assert "task_filters" in names       # post-task-filters (не get-)
+
+    # GET-маршруты доступны
+    assert "task_by_id" in names         # get-task-by-id /task/{id} [get]
+    assert "contact_by_id" in names      # get-contact-by-id [get]
 
 
 def test_all_tool_descriptions_are_russian(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -37,6 +37,19 @@ def build_parser() -> argparse.ArgumentParser:
         help="Валидировать ответы по схемам спеки (по умолчанию true)",
     )
     parser.add_argument(
+        "--export-dir",
+        help="Базовый каталог выгрузки задач в файлы (переопределяет PLANFIX_EXPORT_DIR).",
+    )
+    parser.add_argument(
+        "--export-account",
+        help="Имя аккаунта для имён файлов и frontmatter (переопределяет PLANFIX_EXPORT_ACCOUNT).",
+    )
+    parser.add_argument(
+        "--comments-per-file",
+        type=int,
+        help="Размер чанка комментариев в файле Markdown (переопределяет PLANFIX_EXPORT_COMMENTS_PER_FILE).",
+    )
+    parser.add_argument(
         "--host",
         default="127.0.0.1",
         help="Адрес для HTTP-транспорта (по умолчанию 127.0.0.1).",
@@ -49,7 +62,16 @@ def main(argv: list[str] | None = None) -> None:
     args = build_parser().parse_args(argv)
 
     settings_overrides: dict[str, object] = {}
-    for field in ("base_url", "api_token", "tags", "include_operation_ids", "exclude_operation_ids"):
+    for field in (
+        "base_url",
+        "api_token",
+        "tags",
+        "include_operation_ids",
+        "exclude_operation_ids",
+        "export_dir",
+        "export_account",
+        "comments_per_file",
+    ):
         value = getattr(args, field)
         if value is not None:
             settings_overrides[field] = value

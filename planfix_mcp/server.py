@@ -14,6 +14,7 @@ from fastmcp.server.providers.openapi.components import (
 from fastmcp.server.providers.openapi.routing import HTTPRoute
 from planfix_mcp.config import ROOT_DIR, Settings
 from planfix_mcp.descriptions import DESCRIPTIONS
+from planfix_mcp.export import build_export_tools
 from planfix_mcp.filters import build_route_map_fn
 from planfix_mcp.names import NAMES
 
@@ -56,6 +57,9 @@ def build_server(
         mcp_names=NAMES,
         validate_output=settings.validate_output,
     )
+
+    for tool in build_export_tools(client, settings):
+        server.add_tool(tool)
 
     if settings.exclude_technical_comments:
         _apply_technical_comment_filter(server)
